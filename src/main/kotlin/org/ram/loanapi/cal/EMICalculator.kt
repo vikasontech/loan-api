@@ -21,11 +21,11 @@ class EMICalculator(
                         config.principal.toDouble(),
                         config.futureValue?.toDouble() ?: 0.0,
                         config.type ?: false
-                ))
+                )).multiply(BigDecimal.valueOf(-1))
     }
 
     data class Config(
-            val rate: Double,
+            val yearlyRate: Double,
             val months: Int,
             val principal: BigDecimal,
             val futureValue: BigDecimal? = BigDecimal.ZERO,
@@ -33,7 +33,7 @@ class EMICalculator(
     ) {
 
         fun getRateInPercentage(): Double {
-            return rate / 100
+            return yearlyRate / 100
         }
 
     }

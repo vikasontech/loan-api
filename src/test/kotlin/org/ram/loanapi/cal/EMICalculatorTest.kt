@@ -15,7 +15,7 @@ internal class EMICalculatorTest{
         Assert.isTrue((
                 EMICalculator(
                         EMICalculator.Config(
-                                rate = 8.35,
+                                yearlyRate = 8.35,
                                 months = 180,
                                 principal = BigDecimal.valueOf(4155230)
                         )).calculateEmiString()

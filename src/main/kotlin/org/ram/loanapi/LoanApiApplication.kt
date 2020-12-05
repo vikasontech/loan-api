@@ -2,6 +2,7 @@ package org.ram.loanapi
 
 import com.mongodb.DuplicateKeyException
 import org.bson.types.ObjectId
+import org.ram.loanapi.cal.EMICalculator
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.data.repository.CrudRepository
@@ -35,15 +36,22 @@ class AccountResource(
     @PostMapping("/create")
     fun createResource(): Mono<ResponseEntity<AccountDetail>> {
 
-
-        return accountDetailsRepo.save(
-                AccountDetail(
-                        name = "vikas",
-                        userId = "vikas.on",
-                        bankName = "hdfc",
-                        balance = BigDecimal.ONE,
-                        amount = BigDecimal.ONE,
-                        interestRate = 8.35))
+        return Mono.just(EMICalculator.Config( yearlyRate = 8.35,
+                months = 180,
+                principal = BigDecimal.ONE))
+                .map { EMICalculator(it) }
+                .map { it.calculateEmi() }
+                .flatMap {
+                    accountDetailsRepo.save(
+                            AccountDetail(
+                                    name = "vikas",
+                                    userId = "vikas.on",
+                                    bankName = "hdfc",
+                                    balance = BigDecimal.ONE,
+                                    amount = BigDecimal.ONE,
+                                    interestRate = 8.35,
+                                    emi = BigDecimal.valueOf(it.toDouble())))
+                }
                 .map { ResponseEntity.ok(it) }
                 .onErrorResume {
                     when (it) {
@@ -54,7 +62,7 @@ class AccountResource(
                 }
     }
 
-    private fun handleDuplicateUserIdError(): Mono<ResponseEntity<AccountDetail>> =
+    private fun handleDuplicateUserIdError(): Mono<out ResponseEntity<AccountDetail>> =
             Mono.just(ResponseEntity.badRequest().build())
 
 }
@@ -70,6 +78,7 @@ data class AccountDetail(
         val amount: BigDecimal,
         val interestRate: Double,
         val userId: String,
+        val emi: BigDecimal,
 )
 
 
